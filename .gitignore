@@ -1,0 +1,116 @@
+# =========================
+# ChemDeep release-safe .gitignore
+# =========================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.eggs/
+*.egg-info/
+build/
+dist/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+.fleet/
+.kiro/
+.claude/
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- Local secrets / environment ---
+config/.env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.envrc
+
+# Nested service secrets
+paper-search-mcp-nodejs/.env
+mcp-websearch/.env
+mcp-websearch/.envrc
+
+# --- Privacy content ---
+config/cf_cookies.json
+logs/
+cache/
+data/model_state.json
+data/run_history.json
+runs/
+profiles/
+chemdeep.db
+data/checkpoints/
+data/library/
+data/projects/
+data/reports/
+
+# --- Runtime logs ---
+logs/
+*.log
+*.out
+err.txt
+
+# --- Local databases / state ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Runtime / generated data ---
+cache/
+runs/
+profiles/
+data/
+
+# Keep empty structure docs if later added
+!data/.gitkeep
+!cache/.gitkeep
+!runs/.gitkeep
+
+# --- Browser / Playwright / session artifacts ---
+playwright-report/
+test-results/
+
+# --- Node / frontend generated content ---
+paper-search-mcp-nodejs/node_modules/
+paper-search-mcp-nodejs/dist/
+paper-search-mcp-nodejs/coverage/
+paper-search-mcp-nodejs/.cache/
+paper-search-mcp-nodejs/.parcel-cache/
+paper-search-mcp-nodejs/*.tsbuildinfo
+
+# --- MCP websearch generated content ---
+mcp-websearch/.venv/
+
+# --- Large / downloaded research artifacts ---
+*.pdf
+*.zip
+*.7z
+*.tar
+*.gz
+
+# --- Project-specific local scratch/debug ---
+.cursorrules
+
+# Preserve nested project ignore rules and examples
+!paper-search-mcp-nodejs/.gitignore
+!paper-search-mcp-nodejs/.env.example
+!mcp-websearch/.gitignore

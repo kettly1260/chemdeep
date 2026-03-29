@@ -1,0 +1,24 @@
+[project]
+name = "chemdeep-mcp"
+version = "0.1.0"
+description = "ChemDeep MCP Server - 学术文献搜索、评分和推理服务"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.0.0",
+    "httpx[socks]>=0.25.0",
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+chemdeep-mcp = "server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+]

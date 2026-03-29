@@ -1,0 +1,13 @@
+[project]
+name = "mcp-websearch"
+version = "0.1.0"
+description = "Minimal web search MCP server using DDGS (DuckDuckGo)"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=0.5.0",
+    "ddgs>=4.0.0",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

@@ -1,0 +1,12 @@
+typer
+httpx[socks]
+playwright
+trafilatura
+beautifulsoup4
+lxml
+openai
+google-genai
+python-dotenv
+cryptography
+duckduckgo_search
+mcp

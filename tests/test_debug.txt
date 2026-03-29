@@ -1,0 +1,61 @@
+python : ..F..
+???? ?:1 ??: 32
++ ... ONIOENCODING="ut
+f-8"; python tests/tes
+t_bot_mobile_ui.py 2>&
+1 | Out-F ...
++                     
+      ~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (..F..:Stri   
+ ng) [], RemoteExc    
+eption
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+======================
+======================
+======================
+====
+FAIL: test_help_refact
+or_logic (__main__.Tes
+tMobileUX.test_help_re
+factor_logic)
+----------------------
+----------------------
+----------------------
+----
+Traceback (most recent
+ call last):
+  File "F:\YING\Docume
+nts\chemdeep\tests\tes
+t_bot_mobile_ui.py", l
+ine 113, in test_help_
+refactor_logic
+    self.assertIn("Bas
+ic Commands", args[1])
+AssertionError: 'Basic
+ Commands' not found i
+n '?? **ChemDeep Bot H
+elp**\n\n?? *Basic*\n`
+/help` - ?????????\n  
+Usage: `/help [group|a
+ll]`\n\n?? *Config*\n`
+/config` - ????????? (
+Token?????\n  Usage: `
+/config [reset]`\n`/ke
+y set` - ??? API Key (
+??????)\n  Usage: `/ke
+y set <sk-...>`\n'
+
+----------------------
+----------------------
+----------------------
+----
+Ran 5 tests in 0.003s
+
+FAILED (failures=1)

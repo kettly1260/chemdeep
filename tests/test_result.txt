@@ -1,0 +1,13 @@
+test_help_content (tests.test_bot_commands.TestBotCommands.test_help_content) ... ok
+test_key_encryption (tests.test_bot_commands.TestBotCommands.test_key_encryption) ... ok
+test_models_cache (tests.test_bot_commands.TestBotCommands.test_models_cache) ... ok
+test_registry_dispatch (tests.test_bot_commands.TestBotCommands.test_registry_dispatch) ... ok
+test_report_command (tests.test_bot_commands.TestBotCommands.test_report_command) ... ok
+test_run_command_deep_research (tests.test_bot_commands.TestBotCommands.test_run_command_deep_research) ... ok
+test_run_command_file_mode (tests.test_bot_commands.TestBotCommands.test_run_command_file_mode) ... ok
+test_runtime_config_isolation (tests.test_bot_commands.TestBotCommands.test_runtime_config_isolation) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.110s
+
+OK
