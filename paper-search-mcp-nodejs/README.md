@@ -68,16 +68,18 @@ cd paper-search-mcp-nodejs
 # Install dependencies
 npm install
 
-# Copy environment template
-cp .env.example .env
+# Copy environment template from config directory
+cp ../config/paper-search-mcp-nodejs.env.example ../config/paper-search-mcp-nodejs.env
 ```
 
 ### Configuration
 
+The configuration file is located in the parent project's `config/` directory for better organization.
+
 1. **Get Web of Science API Key**
    - Visit [Clarivate Developer Portal](https://developer.clarivate.com/apis)
    - Register and apply for Web of Science API access
-   - Add API key to `.env` file
+   - Add API key to `../config/paper-search-mcp-nodejs.env` file
 
 2. **Get PubMed API Key (Optional)**
    - Without API key: Free usage, 3 requests/second limit
@@ -86,7 +88,7 @@ cp .env.example .env
 
 3. **Configure Environment Variables**
    ```bash
-   # Edit .env file
+   # Edit ../config/paper-search-mcp-nodejs.env file
    WOS_API_KEY=your_actual_api_key_here
    WOS_API_VERSION=v1
    

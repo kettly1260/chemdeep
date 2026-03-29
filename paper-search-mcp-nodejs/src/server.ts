@@ -12,12 +12,18 @@ import {
   PingRequestSchema
 } from '@modelcontextprotocol/sdk/types.js';
 import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { TOOLS } from './mcp/tools.js';
 import { initializeSearchers } from './mcp/searchers.js';
 import { handleToolCall } from './mcp/handleToolCall.js';
 import { isMCPMode, logDebug } from './utils/Logger.js';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from config directory
+dotenv.config({ path: join(__dirname, '../../config/paper-search-mcp-nodejs.env') });
 
 const server = new Server(
   {
