@@ -170,3 +170,74 @@ CHEMDEEP_GOOGLE_SCHOLAR_DELAY=5
         typer.echo(f"Gemini 模型: {MODEL_STATE.gemini_model}")
         typer.echo(f"API Base: {settings.OPENAI_API_BASE}")
         typer.echo(f"Provider: {settings.AI_PROVIDER}")
+
+    @app.command("research")
+    def cli_research(
+        query: str,
+        max_results: int = typer.Option(20, help="最大文献数量"),
+        quick: bool = typer.Option(False, help="快速模式，跳过计划确认")
+    ):
+        """执行深度研究"""
+        from core.services.research.main import DeepResearcher
+        
+        typer.echo(f"🔬 开始深度研究: {query}")
+        typer.echo(f"📊 最大文献数: {max_results}")
+        typer.echo(f"⚡ 快速模式: {quick}")
+        typer.echo("-" * 50)
+        
+        researcher = DeepResearcher(notify_callback=lambda x: typer.echo(x))
+        
+        try:
+            # 1. 生成研究计划
+            typer.echo("📋 正在生成研究计划...")
+            plan = researcher.generate_plan(query)
+            
+            if not quick:
+                # 显示计划并等待确认
+                plan_text = researcher.format_plan(plan)
+                typer.echo("\n" + "="*50)
+                typer.echo("📋 研究计划:")
+                typer.echo("="*50)
+                typer.echo(plan_text)
+                typer.echo("="*50)
+                
+                if not typer.confirm("是否按此计划执行研究?"):
+                    typer.echo("❌ 已取消")
+                    return
+            
+            # 2. 执行搜索
+            typer.echo("\n🔍 正在执行文献搜索...")
+            search_result = researcher.execute_search(plan, max_per_source=50, top_n=max_results)
+            
+            papers = search_result.get("papers", [])
+            typer.echo(f"\n✅ 搜索完成!")
+            typer.echo(f"📚 找到文献: {len(papers)} 篇")
+            typer.echo(f"🔗 数据源: {', '.join(search_result.get('sources_used', []))}")
+            
+            if papers:
+                typer.echo("\n📖 文献列表:")
+                for i, paper in enumerate(papers[:10], 1):  # 只显示前10篇
+                    title = paper.get('title', '无标题')[:60]
+                    authors = paper.get('authors', ['未知'])[0] if paper.get('authors') else '未知'
+                    year = paper.get('year', '未知')
+                    score = paper.get('screening', {}).get('total_score', 'N/A')
+                    typer.echo(f"  {i}. [{score}] {title}...")
+                    typer.echo(f"     作者: {authors} | 年份: {year}")
+                
+                if len(papers) > 10:
+                    typer.echo(f"  ... 还有 {len(papers) - 10} 篇文献")
+            
+            # 3. 生成报告 (如果有足够的文献)
+            if len(papers) >= 3:
+                typer.echo("\n📝 正在生成研究报告...")
+                # 这里可以添加报告生成逻辑
+                typer.echo("📄 报告生成功能开发中...")
+            else:
+                typer.echo("\n⚠️ 文献数量不足，无法生成完整报告")
+            
+            typer.echo("\n🎉 深度研究完成!")
+            
+        except Exception as e:
+            typer.echo(f"❌ 研究失败: {e}")
+            import traceback
+            typer.echo(traceback.format_exc())
