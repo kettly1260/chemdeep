@@ -192,9 +192,20 @@ CHEMDEEP_GOOGLE_SCHOLAR_DELAY=5
             typer.echo("📋 正在生成研究计划...")
             plan = researcher.generate_plan(query)
             
+            # 创建兼容的计划对象，包含question属性
+            class CompatiblePlan:
+                def __init__(self, plan_v2, question):
+                    self.question = question
+                    # 复制其他属性
+                    for attr in dir(plan_v2):
+                        if not attr.startswith('_'):
+                            setattr(self, attr, getattr(plan_v2, attr))
+            
+            compatible_plan = CompatiblePlan(plan, query)
+            
             if not quick:
                 # 显示计划并等待确认
-                plan_text = researcher.format_plan(plan)
+                plan_text = researcher.format_plan(compatible_plan)
                 typer.echo("\n" + "="*50)
                 typer.echo("📋 研究计划:")
                 typer.echo("="*50)
@@ -207,7 +218,7 @@ CHEMDEEP_GOOGLE_SCHOLAR_DELAY=5
             
             # 2. 执行搜索
             typer.echo("\n🔍 正在执行文献搜索...")
-            search_result = researcher.execute_search(plan, max_per_source=50, top_n=max_results)
+            search_result = researcher.execute_search(compatible_plan, max_per_source=50, top_n=max_results)
             
             papers = search_result.get("papers", [])
             typer.echo(f"\n✅ 搜索完成!")
