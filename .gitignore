@@ -46,6 +46,7 @@ config/.env
 
 # Nested service secrets
 paper-search-mcp-nodejs/.env
+config/paper-search-mcp-nodejs.env
 mcp-websearch/.env
 mcp-websearch/.envrc
 
