@@ -29,7 +29,7 @@ dotenv.config({ path: join(__dirname, '../../config/paper-search-mcp-nodejs.env'
 const server = new Server(
   {
     name: 'paper-search-mcp-nodejs',
-    version: '0.2.5'
+    version: '0.2.6'
   },
   {
     capabilities: {
@@ -51,7 +51,7 @@ server.setRequestHandler(InitializeRequestSchema, async request => {
     },
     serverInfo: {
       name: 'paper-search-mcp-nodejs',
-      version: '0.2.5'
+      version: '0.2.6'
     }
   };
 });

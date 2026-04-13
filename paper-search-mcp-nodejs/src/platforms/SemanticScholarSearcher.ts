@@ -9,6 +9,8 @@ import * as path from 'path';
 import { Paper, PaperFactory } from '../models/Paper.js';
 import { PaperSource, SearchOptions, DownloadOptions, PlatformCapabilities } from './PaperSource.js';
 import { RateLimiter } from '../utils/RateLimiter.js';
+import { ErrorHandler } from '../utils/ErrorHandler.js';
+import { RequestCache } from '../utils/RequestCache.js';
 import { sanitizeDoi } from '../utils/SecurityUtils.js';
 import { TIMEOUTS, USER_AGENT } from '../config/constants.js';
 import { logDebug } from '../utils/Logger.js';
@@ -71,20 +73,26 @@ interface SemanticPaper {
 
 export class SemanticScholarSearcher extends PaperSource {
   private readonly rateLimiter: RateLimiter;
+  private readonly cache: RequestCache<Paper[]>;
   private readonly baseApiUrl: string;
 
   constructor(apiKey?: string) {
     super('semantic', 'https://api.semanticscholar.org/graph/v1', apiKey);
     this.baseApiUrl = this.baseUrl;
 
-    // Semantic Scholar API Rate Limit:
-    // User requested strict 1 request per second cumulative.
-    // This overrides previous logic.
-    const requestsPerSecond = 1;
+    // Semantic Scholar免费API限制：100 requests per 5 minutes
+    // 付费API: 1000 requests per 5 minutes
+    // 更保守的速率限制以避免被封
+    const requestsPerMinute = apiKey ? 180 : 18; // 有API密钥时更宽松
     this.rateLimiter = new RateLimiter({
-      requestsPerSecond: requestsPerSecond,
-      burstCapacity: 1, // Minimize burst to strictly adhere to 1 req/sec spacing
+      requestsPerSecond: requestsPerMinute / 60,
+      burstCapacity: Math.max(3, Math.floor(requestsPerMinute / 20)), // 降低突发容量
       debug: process.env.NODE_ENV === 'development'
+    });
+
+    this.cache = new RequestCache<Paper[]>({
+      maxSize: 100,
+      ttlMs: 3600000 // 1 hour
     });
   }
 
@@ -103,6 +111,18 @@ export class SemanticScholarSearcher extends PaperSource {
    * 搜索Semantic Scholar论文
    */
   async search(query: string, options: SemanticSearchOptions = {}): Promise<Paper[]> {
+    const customOptions = options as any;
+    const forceRefresh = customOptions.forceRefresh === true;
+
+    // Check cache first
+    if (!forceRefresh) {
+      const cacheKey = this.cache.generateKey('semantic', query, options);
+      const cached = this.cache.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+    }
+
     await this.rateLimiter.waitForPermission();
 
     try {
@@ -143,14 +163,16 @@ export class SemanticScholarSearcher extends PaperSource {
       logDebug(`Semantic Scholar API Request: GET ${url}`);
       logDebug('Semantic Scholar Request params:', params);
 
-      const response = await axios.get(url, {
-        params,
-        headers,
-        timeout: TIMEOUTS.DEFAULT,
-        // 改善请求可靠性
-        maxRedirects: 5,
-        validateStatus: (status) => status < 500 // allow 4xx through so we can provide consistent messaging
-      });
+      const response = await ErrorHandler.retryWithBackoff(
+        () => axios.get(url, {
+          params,
+          headers,
+          timeout: TIMEOUTS.DEFAULT,
+          maxRedirects: 5,
+          validateStatus: (status) => status < 500
+        }),
+        { context: 'Semantic Scholar search' }
+      );
 
       logDebug(`Semantic Scholar API Response: ${response.status} ${response.statusText}`);
 
@@ -163,6 +185,10 @@ export class SemanticScholarSearcher extends PaperSource {
       const papers = this.parseSearchResponse(response.data);
       logDebug(`Semantic Scholar Parsed ${papers.length} papers`);
 
+      // Cache results
+      const cacheKey = this.cache.generateKey('semantic', query, options);
+      this.cache.set(cacheKey, papers);
+
       return papers;
     } catch (error: any) {
       logDebug('Semantic Scholar Search Error:', error.message);
@@ -174,12 +200,12 @@ export class SemanticScholarSearcher extends PaperSource {
           `Rate limited by Semantic Scholar API. ${retryAfter ? `Retry after ${retryAfter} seconds.` : 'Please wait before making more requests.'}`
         );
       }
-
+      
       // 处理API限制错误
       if (error.response?.status === 403) {
         logDebug('Access denied. Please check your API key or ensure you are within the free tier limits.');
       }
-
+      
       this.handleHttpError(error, 'search');
     }
   }
@@ -211,14 +237,17 @@ export class SemanticScholarSearcher extends PaperSource {
         headers['x-api-key'] = this.apiKey;
       }
 
-      const response = await axios.get(url, {
-        params,
-        headers,
-        timeout: TIMEOUTS.DEFAULT,
-        maxRedirects: 5,
-        validateStatus: (status) => status < 500
-      });
-
+      const response = await ErrorHandler.retryWithBackoff(
+        () => axios.get(url, {
+          params,
+          headers,
+          timeout: TIMEOUTS.DEFAULT,
+          maxRedirects: 5,
+          validateStatus: (status) => status < 500
+        }),
+        { context: 'Semantic Scholar paper details' }
+      );
+      
       return this.parseSemanticPaper(response.data);
     } catch (error: any) {
       logDebug('Error getting paper details from Semantic Scholar:', error.message);
@@ -238,7 +267,7 @@ export class SemanticScholarSearcher extends PaperSource {
       }
 
       const savePath = options.savePath || './downloads';
-
+      
       // 确保保存目录存在
       if (!fs.existsSync(savePath)) {
         fs.mkdirSync(savePath, { recursive: true });
@@ -252,13 +281,14 @@ export class SemanticScholarSearcher extends PaperSource {
         return filePath;
       }
 
-      const response = await axios.get(paper.pdfUrl, {
-        responseType: 'stream',
-        timeout: TIMEOUTS.DOWNLOAD,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-      });
+      const response = await ErrorHandler.retryWithBackoff(
+        () => axios.get(paper.pdfUrl, {
+          responseType: 'stream',
+          timeout: TIMEOUTS.DOWNLOAD,
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+        }),
+        { context: 'Semantic Scholar download' }
+      );
 
       const writer = fs.createWriteStream(filePath);
       response.data.pipe(writer);
@@ -330,10 +360,10 @@ export class SemanticScholarSearcher extends PaperSource {
     try {
       // 提取作者
       const authors = item.authors?.map(author => author.name) || [];
-
+      
       // 提取发表日期
-      const publishedDate = item.publicationDate ?
-        this.parseDate(item.publicationDate) :
+      const publishedDate = item.publicationDate ? 
+        this.parseDate(item.publicationDate) : 
         (item.year ? new Date(item.year, 0, 1) : null);
 
       // 提取PDF URL

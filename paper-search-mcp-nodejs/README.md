@@ -8,7 +8,7 @@ A Node.js Model Context Protocol (MCP) server for searching and downloading acad
 ![TypeScript](https://img.shields.io/badge/typescript-^5.5.3-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Platforms](https://img.shields.io/badge/platforms-14-brightgreen.svg)
-![Version](https://img.shields.io/badge/version-0.2.5-blue.svg)
+![Version](https://img.shields.io/badge/version-0.2.6-blue.svg)
 
 ## ✨ Key Features
 
@@ -68,18 +68,16 @@ cd paper-search-mcp-nodejs
 # Install dependencies
 npm install
 
-# Copy environment template from config directory
-cp ../config/paper-search-mcp-nodejs.env.example ../config/paper-search-mcp-nodejs.env
+# Copy environment template
+cp .env.example .env
 ```
 
 ### Configuration
 
-The configuration file is located in the parent project's `config/` directory for better organization.
-
 1. **Get Web of Science API Key**
    - Visit [Clarivate Developer Portal](https://developer.clarivate.com/apis)
    - Register and apply for Web of Science API access
-   - Add API key to `../config/paper-search-mcp-nodejs.env` file
+   - Add API key to `.env` file
 
 2. **Get PubMed API Key (Optional)**
    - Without API key: Free usage, 3 requests/second limit
@@ -88,7 +86,7 @@ The configuration file is located in the parent project's `config/` directory fo
 
 3. **Configure Environment Variables**
    ```bash
-   # Edit ../config/paper-search-mcp-nodejs.env file
+   # Edit .env file
    WOS_API_KEY=your_actual_api_key_here
    WOS_API_VERSION=v1
    
@@ -458,9 +456,9 @@ src/
 3. Register new searcher in `server.ts`
 4. Add corresponding MCP tool
 
-### Security Features (v0.2.5)
+### Security Features (v0.2.6)
 
-The codebase includes comprehensive security utilities:
+The codebase includes comprehensive security and optimization utilities:
 
 ```
 src/utils/
@@ -475,7 +473,13 @@ src/utils/
 │   ├── ApiError class    # Custom error with metadata
 │   ├── HTTP error codes  # 400-504 handling
 │   └── Retry logic       # Exponential backoff
-└── RateLimiter.ts        # Token bucket rate limiting
+├── RateLimiter.ts        # Token bucket rate limiting
+├── QuotaManager.ts       # Daily quota tracking (New in v0.2.6)
+├── RequestCache.ts       # LRU caching for requests (New in v0.2.6)
+└── PDFExtractor.ts       # PDF text extraction (New in v0.2.6)
+
+src/services/
+└── CitationService.ts    # Citation fetching service (New in v0.2.6)
 ```
 
 **Security Best Practices:**
@@ -484,8 +488,12 @@ src/utils/
 - API keys are masked in all log output
 - Request timeouts prevent hanging connections
 - Query complexity limits prevent DoS attacks
+- Rate limiting and quota management prevent API abuse
+- Caching reduces external API calls
 
 ### Testing
+
+The test suite has been reorganized for better maintainability (v0.2.6):
 
 ```bash
 # Run tests
@@ -499,16 +507,20 @@ npm run format
 ```
 
 **Test Coverage:**
-- 15 test suites, 144 test cases
+- 19 test suites, 158 test cases
 - All 13 platform searchers tested
 - Security utilities (DOI validation, query sanitization)
 - ErrorHandler (error classification, retry logic)
+- **New Tests**: Rate limiting integration, QuotaManager, RequestCache
 
 | Test Suite | Coverage |
 |------------|----------|
 | Platform Searchers | 13/13 ✅ |
 | SecurityUtils | ✅ |
 | ErrorHandler | ✅ |
+| RateLimiter & Integration | ✅ |
+| QuotaManager | ✅ |
+| RequestCache | ✅ |
 
 ## 🌟 Platform-Specific Features
 
@@ -588,8 +600,12 @@ search_webofscience({
 })
 ```
 
-**🔧 v0.2.5 Improvements:**
+**🔧 v0.2.6 Improvements:**
 
+- ✅ **Performance**: Implemented `RequestCache` for caching search results and API responses
+- ✅ **Reliability**: Added `RateLimiter` and `QuotaManager` to prevent API abuse and 429 errors
+- ✅ **New Features**: Added `CitationService` and `PDFExtractor` for future enhancements
+- ✅ **Testing**: Restructured test suite into `tests/platforms`, `tests/utils`, and `tests/integration`
 - ✅ **18 Field Tags**: Full support for all WoS Starter API field tags
 - ✅ **API Version Selection**: Support for both v1 and v2 endpoints
 - ✅ **Enhanced Filtering**: ISSN, Volume, Page, Issue, DocType, PMID filters

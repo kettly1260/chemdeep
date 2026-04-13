@@ -856,10 +856,27 @@ def execute_search_source(
     year_str = str(min_year) if min_year is not None else None
 
     if source == "lanfanshu":
-        opts = {}
-        if year_str is not None:
-            opts["yearLow"] = year_str
-        return mcp.search_lanfanshu(query, max_results, **opts)
+        from core.scholar_search import LanfanshuSearcher
+        import logging
+        
+        def _notify(msg: str) -> None:
+            import re
+            clean_msg = re.sub(r"[^\x00-\x7F]+", "", msg)
+            logging.info(f"[Lanfanshu] {clean_msg}")
+            
+        searcher = LanfanshuSearcher(notify_callback=_notify)
+        logging.info(f"Bypassing Node MCP for lanfanshu, using Python Playwright layer. Query: {query}")
+        
+        # Python implementation currently does not natively support min_year in URL, 
+        # so we rely on the query text or ignore it to ensure results are returned
+        res = searcher.search(query, max_results=max_results)
+        
+        # Normalize result dictionary
+        return {
+            "success": res.get("success", False),
+            "papers": res.get("papers", []),
+            "error": res.get("error")
+        }
     if source == "openalex":
         return mcp.search_openalex(query, max_results, year=year_str)
     if source == "crossref":
